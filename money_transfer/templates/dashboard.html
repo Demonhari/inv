@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>User Dashboard</title>
+<link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+</head>
+<body>
+    <div align="center" style="background-color: rgb(45, 45, 45); padding: 10px">
+        <img src="{{url_for('static', filename='/resources/KSMT Logo without Name.png')}}" align="middle" style="
+        width: 50%" />
+      </div>
+    <div class="modal modal-sheet position-static d-block bg-body-secondary p-4 py-md-5" tabindex="-1" role="dialog" id="modalTour">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content rounded-4 shadow">
+            <div class="modal-body p-5">
+              <h2 class="fw-bold mb-0">Welcome, {{ username }}!</h2>
+      
+              <ul class="d-grid gap-4 my-5 list-unstyled small">
+                <li class="d-flex gap-4">
+                  <svg class="bi text-body-secondary flex-shrink-0" width="48" height="48"><use xlink:href="#grid-fill"></use></svg>
+                  <div>
+                    <h5 class="mb-0">Your Transfer History</h5>
+                    History of all your transfers made.
+                  </div>
+                </li>
+                <li class="d-flex gap-4">
+                  <svg class="bi text-warning flex-shrink-0" width="48" height="48"><use xlink:href="#bookmark-star"></use></svg>
+                  <div>
+                    <h5 class="mb-0">Transfer Requests</h5>
+                    Initiate transfer requests > <a href="/transfer">Submit New Transfer Request</a>.
+                  </div>
+                </li>
+                <!--<li class="d-flex gap-4">
+                  <svg class="bi text-primary flex-shrink-0" width="48" height="48"><use xlink:href="#film"></use></svg>
+                  <div>
+                    <h5 class="mb-0">Video embeds</h5>
+                    Share videos wherever you go.
+                  </div>
+                </li>-->
+              </ul>
+              <button type="button" class="btn btn-lg btn-primary mt-5 w-100" data-bs-dismiss="modal">Great, thanks!</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    <!-- Transfer history will be listed here -->
+    
+</body>
+</html>

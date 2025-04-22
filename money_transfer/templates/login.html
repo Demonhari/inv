@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Money Transfer App - Login</title>
+  </head>
+  <body>
+    <link
+      rel="stylesheet"
+      type="text/css"
+      href="{{ url_for('static', filename='styles/index.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <h2 align="center" style="background-color: cadetblue; padding: 10px">
+      Login
+    </h2>
+    <div class="modal modal-sheet position-static d-block bg-body-secondary p-4 py-md-5" tabindex="-1" role="dialog" id="modalTour">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content rounded-4 shadow">
+          <div class="modal-body p-5">
+            <form action="/login" method="post">
+              <label for="username">Username:</label>
+              <br />
+              <input type="text" id="username" name="username" />
+              <br />
+              <label for="password">Password:</label>
+              <br />
+              <input type="password" id="password" name="password" />
+              <br />
+              <input type="checkbox" onclick="togglePassword()" /> Show password
+              <br />
+              <center><input type="submit" value="Login" /></center>
+            </form>
+          </br>
+            <p align="center"><a href="/forgot_password">Forgot Password?</a></p>
+        </div>
+        <div align="center"><div class="line-separator"></div> <div class="or-label">or</div><div class="line-separator"></div></div>
+
+
+        <div class="row">
+            <div class="col-md-12">
+              <a class="btn btn-lg btn-google btn-block text-uppercase btn-outline" href="{{ url_for('google.login') }}"><img src="https://img.icons8.com/color/16/000000/google-logo.png">&nbsp; &nbsp;Login with Google</a><br>
+
+            </div>
+
+    <script>
+      function togglePassword() {
+        var password = document.getElementById("password");
+        if (password.type === "password") {
+          password.type = "text";
+        } else {
+          password.type = "password";
+        }
+      }
+    </script>
+  </body>
+</html>

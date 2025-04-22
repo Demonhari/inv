@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Money Transfer App - Register</title>
+  <link
+      rel="stylesheet"
+      type="text/css"
+      href="{{ url_for('static', filename='styles/index.css') }}"
+    />
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+  </head>
+  <body>
+    <h2 align="center" style="background-color: cadetblue; padding: 10px">
+      Register
+    </h2>
+    <div class="modal modal-sheet position-static d-block bg-body-secondary p-4 py-md-5" tabindex="-1" role="dialog" id="modalTour">
+      <div class="modal-dialog" role="document">
+        <div class="modal-content rounded-4 shadow">
+          <div class="modal-body p-5">
+        <form action="/register" method="post">
+          <label for="username">Username:</label>
+          <br /><input type="text" id="username" name="username" /><br />
+          <label for="password">Password:</label>
+          <br /><input type="password" id="password" name="password" /><br />
+          <label for="confirm_password">Confirm Password:</label>
+          <br /><input
+            type="password"
+            id="confirm_password"
+            name="confirm_password"
+          />
+          <br /><input type="checkbox" onclick="togglePassword()" /> Show
+          Password<br />
+
+          <label for="question1">What is your mother's maiden name?</label>
+          <br /><input type="text" id="question1" name="question1" /><br />
+          <label for="question2">What was the name of your first pet?</label>
+          <br /><input type="text" id="question2" name="question2" /><br />
+
+          <br /><br />
+          <center><input type="submit" value="Register" /></center>
+        </form>
+        <br />
+        <p align="center">
+          Already have an account? <a href="/login">Login here</a>.
+        </p>
+      </div>
+    <script>
+      function togglePassword() {
+        var password = document.getElementById("password");
+        var confirm_password = document.getElementById("confirm_password");
+        if (password.type === "password") {
+          password.type = "text";
+          confirm_password.type = "text";
+        } else {
+          password.type = "password";
+          confirm_password.type = "password";
+        }
+      }
+    </script>
+  </body>
+</html>

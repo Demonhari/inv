@@ -1,0 +1,29 @@
+label,
+input,
+protonpass-control {
+  margin-bottom: 10px; /* Adjust this value for desired spacing */
+}
+input {
+  padding-inline: 5em;
+}
+.register {
+  display: flex;
+  align-content: space-between;
+  justify-content: space-between;
+  align-items: center;
+  flex-direction: column;
+}
+.login {
+  display: flex;
+  align-content: space-between;
+  justify-content: space-between;
+  align-items: center;
+  flex-direction: column;
+}
+.forgot_password {
+  display: flex;
+  align-content: space-between;
+  justify-content: space-between;
+  align-items: center;
+  flex-direction: column;
+}
