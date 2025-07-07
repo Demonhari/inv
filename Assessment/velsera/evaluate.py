@@ -5,18 +5,27 @@ from sklearn.metrics import accuracy_score, f1_score, confusion_matrix
 
 def load_preds(model_dir, data_file):
     tokenizer = AutoTokenizer.from_pretrained(model_dir)
-    model = AutoModelForSequenceClassification.from_pretrained(model_dir)
+    model     = AutoModelForSequenceClassification.from_pretrained(model_dir)
+
     texts, labels = [], []
     with open(data_file) as f:
         for ln in f:
-            rec = json.loads(ln)
-            texts.append(rec['abstract'])
-            labels.append(rec['label'])
-    enc = tokenizer(texts, truncation=True, padding=True, max_length=512, return_tensors='pt')
+            obj = json.loads(ln)
+            texts.append(obj["abstract"])
+            labels.append(obj["label"])
+
+    # --- map string → int so it matches model output ---
+    label_map = {"Non-Cancer": 0, "Cancer": 1}
+    y_true = [label_map[x] for x in labels]
+
+    enc = tokenizer(texts, truncation=True, padding=True,
+                    max_length=512, return_tensors="pt")
     with torch.no_grad():
         logits = model(**enc).logits
-    preds = torch.argmax(logits, dim=-1).tolist()
-    return labels, preds
+    y_pred = torch.argmax(logits, dim=-1).tolist()
+
+    return y_true, y_pred
+
 
 if __name__ == "__main__":
     for name, path in [("Baseline","models/baseline"), ("LoRA Fine-Tuned","models/lora_finetuned")]:

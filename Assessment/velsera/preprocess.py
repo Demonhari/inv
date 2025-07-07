@@ -1,22 +1,41 @@
 #!/usr/bin/env python3
-import os, re, pandas as pd
-RAW_DIR = "data/raw"
-OUT_DIR = "data/processed"
-os.makedirs(OUT_DIR, exist_ok=True)
-def normalize_citations(text):
-    text = re.sub(r'\[\d+\]', '[CITATION]', text)
-    text = re.sub(r'\([A-Za-z]+ et al\\., \\d{4}\)', '(CITATION)', text)
-    return text
-def clean_metadata(text):
-    lines = text.splitlines()
-    return "\\n".join([ln for ln in lines if not re.match(r'^(Journal|DOI|Author):', ln)])
-def process_file(fname):
-    df = pd.read_csv(os.path.join(RAW_DIR, fname))
-    df = df.dropna(subset=['abstract'])
-    df['abstract'] = df['abstract'].apply(clean_metadata).apply(normalize_citations)
-    df.to_parquet(os.path.join(OUT_DIR, fname.replace('.csv','.parquet')), index=False)
-    print(f"Processed {len(df)} records into {OUT_DIR}")
-if __name__ == "__main__":
-    for f in os.listdir(RAW_DIR):
-        if f.endswith(".csv") or f.endswith(".tsv"):
-            process_file(f)
+"""
+Build a *single* labelled Parquet file from
+  data/raw/Cancer/*.txt
+  data/raw/Non-Cancer/*.txt
+Outputs:
+  data/processed/dataset.parquet
+  data/processed/train.jsonl
+  data/processed/test.jsonl
+"""
+import pathlib, re, pandas as pd
+from sklearn.model_selection import train_test_split
+
+RAW_ROOT = pathlib.Path("data/raw")
+OUT_DIR  = pathlib.Path("data/processed")
+OUT_DIR.mkdir(parents=True, exist_ok=True)
+
+def clean(txt: str) -> str:
+    txt = "\n".join(
+        ln for ln in txt.splitlines()
+        if not re.match(r'^\s*(PMID|Journal|Author|DOI)', ln)
+    )
+    txt = re.sub(r'\[\d+\]', '[CITATION]', txt)
+    txt = re.sub(r'\([A-Za-z]+ et al\.,? \d{4}\)', '(CITATION)', txt)
+    return txt.strip()
+
+records = []
+for label in ("Cancer", "Non-Cancer"):
+    for f in (RAW_ROOT/label).glob("*.txt"):
+        records.append({"abstract": clean(f.read_text(encoding="utf-8")), "label": label})
+
+df = pd.DataFrame.from_records(records)
+df.to_parquet(OUT_DIR/"dataset.parquet", index=False)
+
+# create a fixed 80/20 split so every other script agrees
+train, test = train_test_split(df, test_size=0.20, stratify=df.label, random_state=42)
+train.to_json(OUT_DIR/"train.jsonl", orient="records", lines=True)
+test.to_json(OUT_DIR/"test.jsonl",  orient="records", lines=True)
+
+print(f"Wrote {len(df):,} abstracts → {OUT_DIR/'dataset.parquet'}")
+print(f"Train: {len(train):,}  Test: {len(test):,}")
