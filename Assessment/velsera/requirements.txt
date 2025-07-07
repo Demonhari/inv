@@ -1,0 +1,18 @@
+# Core
+numpy
+pandas
+scikit-learn
+regex
+# Transformers & PEFT
+transformers>=4.34.0
+peft
+torch>=2.0.0
+# NLP for disease extraction
+# spacy
+# scispacy
+# en_ner_bc5cdr_md
+# Web/API
+fastapi
+uvicorn[standard]
+# Utilities
+langchain
