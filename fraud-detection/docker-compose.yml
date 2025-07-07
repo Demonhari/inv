@@ -1,15 +1,14 @@
-# fraud-detection/airflow/docker-compose.yml
 version: '3.8'
 
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
     container_name: zookeeper
+    ports:
+      - "2181:2181"
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - "2181:2181"
 
   kafka:
     image: confluentinc/cp-kafka:7.4.0
@@ -41,9 +40,9 @@ services:
       retries: 10
       start_period: 10s
 
-  webserver:
+  airflow_webserver:
     build:
-      context: .
+      context: ./airflow
       dockerfile: Dockerfile
     container_name: airflow_webserver
     depends_on:
@@ -51,36 +50,43 @@ services:
         condition: service_healthy
       kafka:
         condition: service_started
-    volumes:
-      - ./dags:/opt/airflow/dags
     env_file:
-      - .env
+      - ./airflow/.env
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
       _PIP_ADDITIONAL_REQUIREMENTS: apache-airflow-providers-apache-kafka
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
     ports:
       - "8080:8080"
     command: webserver
 
-  scheduler:
+  airflow_scheduler:
     build:
-      context: .
+      context: ./airflow
       dockerfile: Dockerfile
     container_name: airflow_scheduler
     depends_on:
-      webserver:
+      airflow_webserver:
         condition: service_started
-      kafka:
-        condition: service_started
-    volumes:
-      - ./dags:/opt/airflow/dags
     env_file:
-      - .env
+      - ./airflow/.env
     environment:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://airflow:airflow@postgres/airflow
+    volumes:
+      - ./airflow/dags:/opt/airflow/dags
     command: scheduler
+
+  producer:
+    build:
+      context: ./producer
+      dockerfile: Dockerfile
+    container_name: producer
+    depends_on:
+      - kafka
+    command: python producer.py
 
 volumes:
   postgres-db-volume:

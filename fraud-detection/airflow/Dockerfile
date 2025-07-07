@@ -2,4 +2,7 @@ FROM apache/airflow:2.8.1
 
 USER airflow
 
-RUN pip install --no-cache-dir kafka-python
+RUN pip install --no-cache-dir \
+    kafka-python \
+    pandas \
+    great_expectations

@@ -19,9 +19,12 @@ services:
       start_period: 10s
 
   webserver:
-    image: apache/airflow:2.8.1
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: airflow_webserver
-    depends_on:
+    volumes:
+      - ./dags:/opt/airflow/dags    depends_on:
       postgres:
         condition: service_healthy
     environment:
@@ -33,9 +36,12 @@ services:
     command: webserver
 
   scheduler:
-    image: apache/airflow:2.8.1
+    build:
+      context: .
+      dockerfile: Dockerfile
     container_name: airflow_scheduler
-    depends_on:
+    volumes:
+      - ./dags:/opt/airflow/dags    depends_on:
       webserver:
         condition: service_started
     environment:
