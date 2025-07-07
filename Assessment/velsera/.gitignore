@@ -1,3 +1,15 @@
 
 # ignore Python virtual env
 .venv/
+cat >> .gitignore <<'EOF'
+
+# ─── Velsera pipeline artefacts ─────────────────────────────
+data/raw/
+data/processed/
+models/
+output/
+logs/
+*.log
+# macOS
+.DS_Store
+EOF
