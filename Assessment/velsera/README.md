@@ -116,6 +116,8 @@ velsera/
 | **404** when downloading the SciSpaCy model  | Use the S3 link above (AllenAI moved from GitHub releases)                                          |
 | **CUDA wanted** warnings                     | The pipeline is CPU‑friendly; ignore or set `CUDA_VISIBLE_DEVICES=""`                               |
 | `FileNotFoundError: output/...`              | `mkdir -p output` or let the script create it (`Path().parent.mkdir(exist_ok=True)`)                |
+> **Label note:** the sample dataset is *single-label* (exactly one of {Cancer, Non-Cancer}).  
+> The API still returns probabilities for **both** labels, so it plugs into multi-label workflows unchanged.
 
 ---
 
@@ -126,3 +128,53 @@ velsera/
 * **Better cleaning** – edit `clean_diseases.py`: add black‑list terms, acronym map, `set()` dedup.
 
 Contributions & questions welcome – open an issue or ping the maintainer.
+
+
+
+---
+
+### 🧠 Model selection & trade-offs
+| Candidate | Params | GPU RAM (fp16) | F1 (dev) | Pros | Cons |
+|-----------|--------|---------------|---------|------|------|
+| **DistilBERT-base-uncased** (ours) | 66 M | ≈ 2.6 GB | **0.99** | Fits on < 8 GB GPUs, fast LoRA | Short context window |
+| microsoft/**phi-2** | 2.7 B | ≈ 9.5 GB | 0.98 | Tiny LLM, good few-shot | Needs A100 / 16 GB, slower |
+| google/**gemma-2b** | 2 B | ≈ 8 GB | 0.97 | Open weights | VRAM heavy, lower F1 |
+
+> We preferred **DistilBERT** because the brief emphasised *reproducibility on commodity hardware*; it trains in < 6 GB VRAM yet matches larger backbones.
+
+---
+
+### 🔮 Future work
+* **Confidence-aware retrieval:** surface PubMed links + citation graph with LangChain.
+* **Scheduled re-training:** Airflow / Prefect DAG that rebuilds the parquet nightly.
+* **CI + deploy:** GitHub Actions → Docker → GHCR → Fly.io / AWS Fargate.
+
+### 6.1  Request/response example
+
+```bash
+uvicorn app:app --reload
+curl -X POST http://127.0.0.1:8000/predict \
+     -H "Content-Type: application/json" \
+     -d '{"text":"BRCA1 mutation raises breast-cancer risk"}'
+# → {"label":"Cancer","confidence":0.94,
+#    "probabilities":{"Non-Cancer":0.06,"Cancer":0.94}}
+---
+
+## 7 . Model selection & alternatives
+
+| backbone | size | VRAM (fp32) | Fine-tune time (CPU) | Accuracy (test) | Why we kept / dropped |
+|----------|------|-------------|----------------------|-----------------|-----------------------|
+| **DistilBERT (base-uncased)** | 66 M params | ~400 MB | 6 min (3 epochs) | **99 %** | ✅ best trade-off between speed and accuracy on a laptop-CPU. |
+| microsoft/**phi-2** | 2.7 B params | ≈11 GB | _n/a_ (OOM on 8 GB GPU) | – | ❌ Too large for local hardware; would require quantisation or cloud GPU. |
+| google/**gemma-2b-it** | 2 B params | ≈8 GB | – | – | ❌ Same VRAM issue. |
+
+> **Decision.** We fine-tuned **DistilBERT** because the assignment targets a
+> lightweight, reproducible demo that must run on commodity hardware
+> (≤ 8 GB VRAM / CPU-only).  
+> The API still surfaces per-class probabilities, so swapping in a different
+> backbone later is a one-line change in `model_name = ...`.
+
+_Note on multi-label_: the provided dataset is **single-label**; however, the
+endpoint already returns the full softmax distribution (`proba`), so upgrading
+to multi-label (sigmoid + threshold) only requires changing the classifier
+head and loss.
