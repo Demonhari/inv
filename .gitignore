@@ -1,0 +1,6 @@
+
+# macOS
+.DS_Store
+
+# ignore sibling project
+fraud-detection/
