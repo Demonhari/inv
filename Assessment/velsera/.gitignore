@@ -13,3 +13,9 @@ logs/
 # macOS
 .DS_Store
 EOF
+
+# IDE / build artefacts
+*.py[cod]
+__pycache__/
+*.swp
+

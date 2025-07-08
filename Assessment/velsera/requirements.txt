@@ -15,7 +15,8 @@ torch>=2.0.0
 fastapi
 uvicorn[standard]
 # Utilities
-langchain
 langchain>=0.2
 faiss-cpu
 openai
+openai<1
+pydantic<2
