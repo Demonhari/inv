@@ -1,57 +1,36 @@
 #!/usr/bin/env python3
-"""
-─────────────────────────────────────────────────────────────────────────────
- FastAPI micro-service for the Velsera research-paper pipeline
-─────────────────────────────────────────────────────────────────────────────
-
-POST /predict
-Request JSON:
-    {"text": "<PubMed abstract …>"}
-
-Response JSON:
-    {
-      "label": "Cancer",
-      "proba": {
-        "Non-Cancer": 0.0274,
-        "Cancer":     0.9726
-      }
-    }
-
-If a LoRA-fine-tuned checkpoint is present it is preferred; otherwise the
-baseline model is loaded; otherwise we fall back to the raw HF checkpoint
-(distilbert-base-uncased) so the API still starts.
-"""
-
 from pathlib import Path
-from typing import Tuple
+from typing import Tuple, List, Dict
 
 import torch
 from torch.nn.functional import softmax
 from fastapi import FastAPI, HTTPException
-from pydantic import BaseModel
-from transformers import (
-    AutoTokenizer,
-    AutoModelForSequenceClassification,
-)
+from pydantic import BaseModel, Field
+from transformers import AutoTokenizer, AutoModelForSequenceClassification
+
+from evidence import extract_evidence   # ← NEW
 
 # ───────────────────────────────────────────────────────────
 #  Constants & helper to load the best available checkpoint
 # ───────────────────────────────────────────────────────────
-MODEL_DIRS = ["models/lora_finetuned", "models/baseline"]
+MODEL_DIRS = [
+    "models/lora_finetuned",      # DistilBERT-LoRA
+    "models/minilm_finetuned",    # MiniLM-LoRA  ← new
+    "models/baseline",            # full fine-tune
+]
 BASE_CHECKPOINT = "distilbert-base-uncased"
 LABELS = ["Non-Cancer", "Cancer"]        # idx 0 / idx 1
 
 
-def _load_checkpoint() -> Tuple[AutoTokenizer, AutoModelForSequenceClassification, str]:
-    """Return (tokenizer, model, source_name)."""
-    for path in MODEL_DIRS:
-        if Path(path).exists():
+def _load_checkpoint() -> Tuple:
+    for p in MODEL_DIRS:
+        if Path(p).exists():
             return (
-                AutoTokenizer.from_pretrained(path),
-                AutoModelForSequenceClassification.from_pretrained(path),
-                path,
+                AutoTokenizer.from_pretrained(p),
+                AutoModelForSequenceClassification.from_pretrained(p),
+                p,
             )
-    # Fallback – raw HF weights (un-trained)
+    # fallback (un-trained)
     return (
         AutoTokenizer.from_pretrained(BASE_CHECKPOINT),
         AutoModelForSequenceClassification.from_pretrained(
@@ -61,38 +40,41 @@ def _load_checkpoint() -> Tuple[AutoTokenizer, AutoModelForSequenceClassificatio
     )
 
 
-tokenizer, model, _CKPT_NAME = _load_checkpoint()
-
+tokenizer, model, _CKPT = _load_checkpoint()
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 model.to(device).eval()
 
 # ───────────────────────────────────────────────────────────
-#  FastAPI plumbing
+#  FastAPI
 # ───────────────────────────────────────────────────────────
 class InferenceRequest(BaseModel):
-    text: str
+    text: str = Field(..., description="PubMed abstract or free text")
+    k: int = Field(
+        0,
+        ge=0,
+        le=10,
+        description="Return the top-k evidence sentences (0 = disabled).",
+    )
 
 
 app = FastAPI(
     title="Velsera Research-Paper Classifier",
-    description="Predict *Cancer* vs *Non-Cancer* and return per-label probabilities.",
-    version="0.2.0",
+    description="Predict Cancer vs Non-Cancer and optionally return evidence.",
+    version="0.3.0",
 )
 
 
 @app.get("/")
 def health():
-    return {"status": "ok", "checkpoint": _CKPT_NAME, "device": str(device)}
+    return {"status": "ok", "checkpoint": _CKPT, "device": str(device)}
 
 
 @app.post("/predict")
 def predict(req: InferenceRequest):
-    # Sanity check ----------------------------------------------------------
-    if not req.text or not req.text.strip():
-        raise HTTPException(status_code=400, detail="Input text cannot be empty.")
+    if not req.text.strip():
+        raise HTTPException(400, "Input text cannot be empty.")
 
-    # Tokenise --------------------------------------------------------------
-    inputs = tokenizer(
+    toks = tokenizer(
         req.text,
         return_tensors="pt",
         truncation=True,
@@ -100,22 +82,25 @@ def predict(req: InferenceRequest):
         max_length=512,
     ).to(device)
 
-    # Infer -----------------------------------------------------------------
     with torch.no_grad():
-        logits = model(**inputs).logits.squeeze()  # shape: (2,)
+        logits = model(**toks).logits.squeeze()
 
-    probs = softmax(logits, dim=-1).cpu().tolist()
+    probs = softmax(logits, dim=-1).tolist()
     pred_idx = int(torch.argmax(logits))
-
-    return {
+    response: Dict = {
         "label": LABELS[pred_idx],
-        "proba": {LABELS[i]: round(p, 4) for i, p in enumerate(probs)},
+        "confidence": round(probs[pred_idx], 4),
+        "probabilities": {LABELS[i]: round(p, 4) for i, p in enumerate(probs)},
     }
 
+    if req.k:
+        response["evidence"] = extract_evidence(
+            req.text, tokenizer, model, device, k=req.k
+        )
 
-# ───────────────────────────────────────────────────────────
-#  Dev helper:  python app.py  →  auto-reloading server
-# ───────────────────────────────────────────────────────────
+    return response
+
+
 if __name__ == "__main__":
     import uvicorn
 

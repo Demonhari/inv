@@ -16,3 +16,6 @@ fastapi
 uvicorn[standard]
 # Utilities
 langchain
+langchain>=0.2
+faiss-cpu
+openai
