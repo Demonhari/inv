@@ -1,0 +1,6 @@
+
+# macOS Finder junk
+.DS_Store
+
+# local experiments to ignore
+fraud-detection/
