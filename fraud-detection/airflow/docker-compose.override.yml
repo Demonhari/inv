@@ -1,0 +1,8 @@
+services:
+  webserver:
+    env_file:
+      - .env
+
+  scheduler:
+    env_file:
+      - .env
