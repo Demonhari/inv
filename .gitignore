@@ -1,0 +1,18 @@
+# Recreate .gitignore with a clean, combined set of rules ──▼
+cat > .gitignore <<"EOF"
+# macOS Finder junk
+.DS_Store
+
+# Local sibling project we never commit
+fraud-detection/
+
+# Local Python virtual‑envs
+.venv/
+
+# Assessment data & large model artefacts
+Assessment/
+Assessment/velsera/models/
+*.safetensors
+*.pt
+*.dylib
+EOF
