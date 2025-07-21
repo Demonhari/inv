@@ -4,3 +4,14 @@
 
 # local experiments to ignore
 fraud-detection/
+
+cat >> .gitignore <<'EOF'
+# ─── Never commit local venvs ───────────────
+.venv/
+
+# ─── Model checkpoints & big binaries ──────
+Assessment/velsera/models/
+*.safetensors
+*.pt
+*.dylib
+EOF
