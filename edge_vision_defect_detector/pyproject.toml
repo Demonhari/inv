@@ -1,0 +1,41 @@
+[tool.poetry]
+name = "edge-vision-defect-detector"
+version = "0.1.0"
+description = "YOLOv8 + CNN rare-defect detector with RL active-learning loop for Jetson Orin"
+authors = ["Hari <your@email>"]
+packages = [
+  { include = "edge_vision_defect_detector", from = "src" }
+]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+torch = "^2.3"
+pytorch-lightning = "^2.3"
+ultralytics = "^8.2"          # YOLOv8
+opencv-python-headless = "^4.11"
+scikit-learn = "^1.5"
+mlflow = "^2.13"
+onnx = "^1.17"
+onnxruntime-gpu = { version = "^1.18", markers = "platform_system != 'Linux'" }
+# Triton/TRT for Orin appears in the Dockerfile, not here
+trl = "^0.7"                  # PPO implementation
+numpy = "^1.28"
+faiss-cpu = "^1.8"
+open-telemetry-sdk = "^1.26"
+wandb = "^0.17"
+protobuf = ">=3.20,<5"        # avoid version clash
+# jetson-only extras go in a conditional-extra
+jetson = [
+  "torch==2.3.0+nv24.03::https://download.pytorch.org/whl/cu121",   # wheel URL optional
+]
+
+[tool.poetry.group.dev.dependencies]
+ipython = "^8.25"
+pytest = "^8.1"
+pytest-cov = "^5.0"
+black = "^24.4"
+ruff = "^0.4"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
