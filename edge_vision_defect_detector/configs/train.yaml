@@ -1,0 +1,15 @@
+# --- DATA -------------------------------------------------
+data_yaml: coco128.yaml        # Ultralytics’ 128-image sample set
+img_size: 640
+batch_size: 16
+num_workers: 4
+epochs: 10                     # keep small for local smoke runs
+
+# --- MODEL -----------------------------------------------
+model_name: yolov8n.pt         # swap to yolov8s.pt, custom_cnn.pt, etc.
+learning_rate: 1e-3
+weight_decay: 1e-4
+
+# --- LOGGING / CKPT --------------------------------------
+mlflow_uri: "file:./mlruns"    # local tracking store (works offline)
+experiment_name: "edge_vision_dev"
