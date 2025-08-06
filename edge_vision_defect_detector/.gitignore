@@ -1,0 +1,10 @@
+# venvs
+.venv/
+# OS cruft
+.DS_Store
+# model checkpoints & runs
+models/
+mlruns/
+# IDEs
+.vscode/
+.idea/
