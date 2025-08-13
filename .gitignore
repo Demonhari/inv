@@ -1,18 +1,38 @@
-# Recreate .gitignore with a clean, combined set of rules ──▼
-cat > .gitignore <<"EOF"
-# macOS Finder junk
-.DS_Store
+__pycache__/
+*.pyc
+*.pyo
+.ipynb_checkpoints/
 
-# Local sibling project we never commit
-fraud-detection/
+# data & outputs
+data/
+datasets/
+labelled_data*/
+runs*/
+outputs*/
+checkpoints*/
+patches*/
+experiments*/
+inferenced*/
+output*/
+tinycnn_patch48_*/
+unlabelled_data*/
 
-# Local Python virtual‑envs
-.venv/
-
-# Assessment data & large model artefacts
-Assessment/
-Assessment/velsera/models/
-*.safetensors
+# model / large binaries
 *.pt
-*.dylib
-EOF
+*.pth
+*.ckpt
+*.onnx
+*.tflite
+
+# media
+*.jpg
+*.jpeg
+*.png
+*.bmp
+*.tif
+*.tiff
+
+# OS/editor
+.DS_Store
+.vscode/
+.idea/

@@ -1,0 +1,1 @@
+image_path,mode,gt_index,gt_x,gt_y,gt_w,gt_h,matched,pred_index,pred_x,pred_y,pred_w,pred_h,pred_score,center_dist_px
