@@ -1,0 +1,46 @@
+train_coco: labelled_data/train/_annotations.coco.json
+val_coco:   labelled_data/valid/_annotations.coco.json
+test_coco:  labelled_data/test/_annotations.coco.json
+
+patch_root: data/patches
+model_dir:  data/models
+run_dir:    data/runs
+
+drone_class_names: ["drones"]
+ignore_class_names: ["ground"]
+
+patch_size: 32
+pad: 8
+
+hog:
+  pixels_per_cell: [8, 8]
+  cells_per_block: [2, 2]
+  orientations: 9
+
+lbp:
+  P: 8
+  R: 1
+  method: uniform
+
+candidate:
+  sigmas: [0.7, 1.0, 1.4, 1.8]
+  thresh_rel: 0.02         # relax a bit for tiny dots
+  min_dist: 3
+  base_box: 10
+  min_contrast: 1.0        # prune blobs with very low local contrast (0–255 scale)
+  mask_top_ratio: null     # set to 0.6 if drones only appear in top 60%
+
+train:
+  neg_per_pos: 8
+  hard_neg_from_candidates: true
+  hard_neg_iou_thresh: 0.1
+  C: 1.0
+  class_weight: balanced
+  max_iter: 4000
+  random_state: 42
+
+nms_iou: 0.08
+score_thresh: 0.20         # was 0.5 → too strict after pruning
+max_dets_per_image: 300
+eval_iou: 0.20
+center_tol: 6

@@ -1,0 +1,46 @@
+train_coco: labelled_data/train/_annotations.coco.json
+val_coco: labelled_data/valid/_annotations.coco.json
+test_coco: labelled_data/test/_annotations.coco.json
+patch_root: data/patches
+model_dir: data/models
+run_dir: data/runs
+drone_class_names:
+- drones
+ignore_class_names:
+- ground
+patch_size: 32
+pad: 12
+candidate:
+  sigmas:
+  - 0.7
+  - 0.9
+  - 1.2
+  - 1.6
+  - 2.0
+  thresh_rel: 0.017
+  min_dist: 3
+  base_box: 10
+  min_contrast: 1.2
+  mask_top_ratio: null
+  mask_bottom_ratio: 0.35
+  max_local_std: 18.0
+  blob_sigma: 1.2
+cnn:
+  lr: 1e-3
+  weight_decay: 1e-4
+  batch_size: 256
+  epochs: 15
+  num_workers: 0
+  patience: 5
+  pos_weight: 1.0
+  jitter_brightness: 0.1
+  jitter_contrast: 0.1
+  use_focal: true
+  focal_gamma: 2.0
+  focal_alpha: 0.1
+nms_iou: 0.06
+score_thresh: -0.2
+max_dets_per_image: 80
+eval_iou: 0.2
+center_tol: 6
+blobness_tau: 0.22

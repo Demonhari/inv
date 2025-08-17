@@ -1,10 +1,21 @@
-# venvs
+# python
+__pycache__/
+*.pyc
 .venv/
-# OS cruft
-.DS_Store
-# model checkpoints & runs
-models/
-mlruns/
-# IDEs
-.vscode/
-.idea/
+env/
+*.ipynb_checkpoints
+
+# training artifacts
+data/models/
+data/runs/
+*.pt
+*.pth
+*.onnx
+*.bin
+
+# datasets (push with rsync/gsutil/scp instead)
+labelled_data/images/
+labelled_data/train/*
+labelled_data/valid/*
+labelled_data/test/*
+!labelled_data/**/_annotations.coco.json
