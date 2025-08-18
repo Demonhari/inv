@@ -160,44 +160,87 @@ def convert_coco_to_yolo(data_root: Path, work_dir: Path):
 # --------------------------
 # Training (RT-DETR -> fallback YOLOv8)
 # --------------------------
+# --------------------------
+# Training (CPU-safe: YOLOv8s -> YOLOv8n fallback)
+# --------------------------
 def train_detector(data_yaml: Path, work_dir: Path, epochs=60, imgsz=1280, run_name="rf_detr_medium_drone"):
-    os.environ.setdefault("WANDB_MODE","disabled")  # keep logging simple on a VM
+    """
+    CPU-friendly training:
+      - prefer yolov8s (then yolov8n fallback)
+      - small batch + gradient accumulation
+      - smaller imgsz
+      - light augmentations
+      - freeze early layers to save memory
+    """
+    os.environ.setdefault("WANDB_MODE", "disabled")  # keep logging simple on a VM
     from ultralytics import YOLO
     import torch
-    device = 0 if torch.cuda.is_available() else "cpu"
+
+    device = "cpu"  # force CPU since no GPU available
     runs_dir = work_dir / "runs"
 
-    def train_with(weights):
+    # Robust, low-RAM defaults for CPU
+    cpu_imgsz      = min(imgsz, 960)      # keep reasonable for tiny targets but not too heavy
+    cpu_batch      = 2                    # tiny microbatch
+    cpu_accum      = 8                    # simulate 16 effective batch (2 x 8)
+    cpu_workers    = 0                    # avoid DataLoader workers on CPU
+    cpu_freeze     = 10                   # freeze early layers to cut grad memory (YOLOv8 only)
+
+    # Keep augs very light to cut CPU/RAM
+    aug_args = dict(
+        mosaic=0.0,
+        mixup=0.0,
+        copy_paste=0.0,
+        erasing=0.0,
+        auto_augment="none",
+        hsv_h=0.015, hsv_s=0.7, hsv_v=0.4,  # mild color jitter (cheap)
+    )
+
+    # common train args
+    base_args = dict(
+        data=str(data_yaml),
+        epochs=epochs,
+        imgsz=cpu_imgsz,
+        batch=cpu_batch,
+        accumulate=cpu_accum,
+        device=device,
+        workers=cpu_workers,
+        project="drone_detection",   # wandb-safe name
+        name=run_name,
+        save_dir=str(runs_dir),
+        optimizer="SGD",
+        cos_lr=True,
+        rect=True,                  # rectangular batches → less pad/compute
+        cache=False,                # don't cache in RAM
+        patience=max(epochs // 3, 20),
+        plots=False,                # skip plotting to save RAM/CPU
+        **aug_args,
+    )
+
+    def train_with(weights, freeze_backbone=False):
         print(f"\n--- Training with weights: {weights} ---")
         model = YOLO(weights)
-        results = model.train(
-            data=str(data_yaml),
-            epochs=epochs,
-            imgsz=imgsz,
-            batch=-1,
-            device=device,
-            project="drone_detection",   # wandb-safe name
-            name=run_name,
-            save_dir=str(runs_dir),
-            optimizer="SGD",
-            cos_lr=True,
-            close_mosaic=10,
-            cache=False,
-            patience=20,
-            workers=8 if device != "cpu" else 0,
-        )
+        if freeze_backbone:
+            # freeze first N layers (works for YOLOv8 models)
+            base_args_local = dict(base_args)
+            base_args_local["freeze"] = cpu_freeze
+            results = model.train(**base_args_local)
+        else:
+            results = model.train(**base_args)
         return model
 
+    # On CPU, skip RT-DETR (heavy + previous stride bug) and go straight to v8s -> v8n
     try:
-        model = train_with("rtdetr-l.pt")
+        model = train_with("yolov8s.pt", freeze_backbone=True)
     except Exception as e:
-        print("\n[Warning] RT-DETR failed:", repr(e))
-        print("Falling back to YOLOv8-L.")
-        model = train_with("yolov8l.pt")
+        print("\n[Warning] yolov8s failed on this runtime:", repr(e))
+        print("Falling back to yolov8n (smallest).")
+        model = train_with("yolov8n.pt", freeze_backbone=True)
 
     best = Path(model.trainer.best)
     print("\nBest weights:", best)
     return best, runs_dir / run_name
+
 
 # --------------------------
 # Sanity check (optional)
