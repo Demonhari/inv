@@ -16,3 +16,6 @@ Assessment/velsera/models/
 *.pt
 *.dylib
 EOF
+.DS_Store
+edge_vision_defect_detector/
+healthbench/
