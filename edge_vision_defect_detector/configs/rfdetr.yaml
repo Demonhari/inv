@@ -1,0 +1,28 @@
+# paths (you already have these)
+dataset_dir: labelled_data         # must contain train/ valid/ test/ each with _annotations.coco.json
+model_dir: data/models             # where RF-DETR checkpoints will be saved
+run_dir: data/runs                 # for visuals/exports
+
+# RF-DETR training & inference
+rfdetr:
+  variant: small         # one of: nano, small, base, medium, large
+  device: mps            # mac: mps; otherwise "cpu" (GPU = "cuda" if available)
+  epochs: 40             # tune upward if training on GPU; keep modest on CPU/MPS
+  batch_size: 2          # per-iteration batch; keep small on MPS/CPU
+  grad_accum_steps: 8    # 2*8=16 effective batch
+  lr: 1.0e-4
+  resolution: 896        # divisible by 56; higher helps tiny drones
+  early_stopping: true
+  output_subdir: rfdetr_small      # folder under model_dir
+  # optional: resume: data/models/rfdetr_small/checkpoint.pth
+
+# inference defaults
+infer:
+  confidence: 0.50
+  iou: 0.50
+  imgsz: 896
+
+# eval
+eval_iou: 0.20           # keep your previous matching IoU
+score_thresh: 0.50       # default visualization threshold (we’ll sweep in evaluator)
+drone_class_names: ["drone"]
