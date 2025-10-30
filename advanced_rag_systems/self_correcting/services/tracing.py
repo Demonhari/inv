@@ -31,24 +31,25 @@ class Tracer:
         )
         self.project = project or os.getenv("LANGCHAIN_PROJECT", "self-correcting-rag")
         self._client = Client() if self.enabled else None
+        self.last_root_run_id = None
 
     @contextmanager
     def run(self, name: str, inputs: Optional[Dict[str, Any]] = None, run_type: str = "chain", parent_id: Optional[str] = None):
         start = time.time()
         run_id = None
+        is_root = parent_id is None
         if self.enabled and self._client:
             try:
                 run = self._client.create_run(
-                    name=name,
-                    run_type=run_type,
-                    inputs=inputs or {},
-                    project_name=self.project,
-                    parent_run_id=parent_id,
+                    name=name, run_type=run_type, inputs=inputs or {},
+                    project_name=self.project, parent_run_id=parent_id,
                     start_time=int(start * 1000),
                 )
                 run_id = run.id
+                if is_root:
+                    self.last_root_run_id = run_id  # <--- add this
             except Exception:
-                run_id = None  # fall back to no-op if anything goes wrong
+                run_id = None 
         error = None
         outputs: Dict[str, Any] = {}
         try:

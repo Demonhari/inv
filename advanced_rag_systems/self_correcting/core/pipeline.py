@@ -70,6 +70,7 @@ class SelfCorrectingPipeline:
                     "feedback": usage_f,
                 },
             }
+            result["trace_run_id"] = root_id
             self.cache.set(query, result)
             root["set_output"](result)
             return result
