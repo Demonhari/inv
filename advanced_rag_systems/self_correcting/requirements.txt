@@ -1,4 +1,10 @@
 openai
 chromadb
+fastapi
+uvicorn
+redis
 tiktoken
+rich
 python-dotenv
+pydantic
+asyncio
