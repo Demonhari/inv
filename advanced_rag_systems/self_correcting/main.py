@@ -1,42 +1,42 @@
+# main.py
+import argparse
 from retriever import Retriever
 from guardrail_agent import GuardrailAgent
 from generator_agent import GeneratorAgent
 from evaluator_agent import EvaluatorAgent
+from logger import stage, info, success
 
-def main():
-    # Step 1: Initialize modules
+def run(query: str):
     retriever = Retriever()
     guardrail = GuardrailAgent()
     generator = GeneratorAgent()
     evaluator = EvaluatorAgent()
 
-    # Step 2: Add sample documents (replace with your corpus)
-    docs = [
-        "RAG stands for Retrieval Augmented Generation, combining search with LLMs.",
-        "The self-correcting RAG pipeline uses multiple LLMs for retrieval, filtering, generation, and evaluation.",
-        "OpenAI GPT models are often used in RAG systems for context-based question answering."
-    ]
-    retriever.add_documents(docs, ids=["1", "2", "3"])
+    stage("Retrieve")
+    docs = retriever.retrieve(query, n_results=5)
+    info(f"Retrieved {len(docs)} passages")
 
-    # Step 3: User query
-    query = "What is a self-correcting RAG pipeline?"
+    stage("Guardrail")
+    filtered = guardrail.filter_relevance(query, docs)
+    info(f"Filtered to {len(filtered)} passages")
 
-    # Step 4: Retrieve documents
-    retrieved = retriever.retrieve(query)
-    print("\nRetrieved Docs:", retrieved)
+    stage("Generate")
+    answer = generator.generate_answer(query, filtered)
+    success("Answer generated")
 
-    # Step 5: Guardrail filtering
-    filtered_docs = guardrail.filter_relevance(query, retrieved)
-    print("\nFiltered Context:", filtered_docs)
+    stage("Evaluate")
+    verdict = evaluator.evaluate_answer(filtered, answer)
+    success(f"Score: {verdict.get('score')}  |  {verdict.get('explanation')}")
 
-    # Step 6: Generate answer
-    answer = generator.generate_answer(query, filtered_docs)
-    print("\nGenerated Answer:", answer)
+    stage("Final Answer")
+    print(answer)
 
-    # Step 7: Evaluate answer
-    evaluation = evaluator.evaluate_answer(filtered_docs, answer)
-    print("\nEvaluation:", evaluation)
-
+def main():
+    parser = argparse.ArgumentParser(description="Self-correcting RAG pipeline")
+    parser.add_argument("query", nargs="*", help="Your question")
+    args = parser.parse_args()
+    q = " ".join(args.query).strip() or "What is a self-correcting RAG pipeline?"
+    run(q)
 
 if __name__ == "__main__":
     main()
