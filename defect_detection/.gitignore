@@ -1,0 +1,28 @@
+# python
+__pycache__/
+*.py[cod]
+*.ipynb_checkpoints
+.venv/
+venv/
+.env
+
+# builds
+dist/
+build/
+*.egg-info/
+
+# outputs & artifacts
+outputs/
+runs/
+wandb/
+.mlflow/
+
+# data caches
+data/**/labels.cache
+data/**/cache*
+data/**/.cache
+data/**/*.zip
+
+# os junk
+.DS_Store
+Thumbs.db

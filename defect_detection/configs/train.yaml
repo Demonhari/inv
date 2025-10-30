@@ -1,0 +1,42 @@
+# High-level run config for training
+project_name: defect_detection
+run_name: v2_yolov8
+seed: 42
+
+# YOLO data yaml (edit classes/paths below in data/defect_data.yaml)
+data_config: data/defect_data.yaml
+
+# Base model weights: pick one of [yolov8n.pt, yolov8s.pt, yolov8m.pt, yolov8l.pt, yolov8x.pt]
+model: yolov8s.pt
+
+# Core training
+imgsz: 640
+epochs: 100
+batch: 16
+device: auto
+workers: 8
+patience: 30
+optimizer: AdamW
+lr0: 0.001
+lrf: 0.01
+weight_decay: 0.0005
+cos_lr: true
+
+# Augmentations & tricks (leverages Ultralytics internals)
+augmentations:
+  hsv_h: 0.015
+  hsv_s: 0.7
+  hsv_v: 0.4
+  degrees: 5.0
+  translate: 0.1
+  scale: 0.5
+  shear: 0.0
+  perspective: 0.0
+  flipud: 0.0
+  fliplr: 0.5
+  mosaic: 1.0
+  mixup: 0.1
+  copy_paste: 0.0
+
+# Where to store runs
+save_dir: outputs

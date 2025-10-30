@@ -1,0 +1,14 @@
+# Base path to your dataset
+path: data/defects  # change this if needed
+
+# Folders relative to 'path'
+train: images/train
+val: images/val
+test: images/test  # optional
+
+# Class names (edit to match your labels)
+names:
+  0: scratch
+  1: dent
+  2: crack
+  3: discoloration
