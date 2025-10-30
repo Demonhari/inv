@@ -1,0 +1,13 @@
+# python
+__pycache__/
+*.pyc
+.venv/
+.env
+
+# local vector store & data
+.chroma/
+data/
+
+# notebooks & logs
+*.ipynb
+logs/
